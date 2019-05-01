@@ -4,21 +4,25 @@ from util import *
 
 
 class DepthModel:
-    def __init__(self, input_shape, weights_path='./weights/dep_weights_best.h5'):
+    def __init__(self, input_shape=None, input_tensor=None, weights_path='./weights/dep_weights_best.h5'):
         self.inputs = None
         self.model = None
         self.nn = None
         self.callbacks = None
         self.params = None
         self.outputs = None
+        self.input_tensor = input_tensor
         self.input_shape = input_shape
         self.weights_path = weights_path
 
         self._build()
 
     def _build(self):
+        if self.input_shape is not None:
+            input = Input(shape=self.input_shape)
+        else:
+            input = Input(tensor=self.input_tensor)
 
-        input = Input(shape=self.input_shape)
         res1 = ZeroPadding2D((3, 3))(input)
         res1 = conv(res1, 64, (7, 7), (2, 2), name='conv1')
         res1 = batchnorm(res1, name='bn_conv1', axis=3)

@@ -6,7 +6,7 @@ from keras.utils.vis_utils import plot_model
 #import os
 #os.environ["PATH"] += os.pathsep + r'C:\Program Files (x86)\Graphviz2.38\bin'
 
-class odometry_net():
+class OdometryModel():
     def __init__(self, inputs=None, input_shape=None):
 
         if input_shape is not None:
