@@ -1,0 +1,6 @@
+*.png
+*.jpg
+*.xml
+*.h5
+*.hdf5
+/.idea
