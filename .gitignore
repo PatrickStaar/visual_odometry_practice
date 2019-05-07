@@ -4,3 +4,9 @@
 *.h5
 *.hdf5
 /.idea
+/.vs/VSWorkspaceState.json
+*.sqlite
+*.suo
+*.vs
+/DL/__pycache__
+*.pyc

@@ -21,6 +21,9 @@ def deconv(inputs, filters, kernel, stride, input_shape=None, name=None):
                            )(inputs)
 
 
+
+
+
 def activiate(inputs, type='relu'):
     return Activation(activation=type)(inputs)
 
@@ -110,6 +113,8 @@ def decoder_block(input1, input2, output_channels, stage, block='a'):
 
     return x
 
+
+# data reading
 
 def img_read(filename):
     img =np.array(Image.open(filename),dtype=np.float32)

@@ -37,6 +37,7 @@ class OdometryModel():
         ori = Dense(3,name='orient0')(ori)
 
         self.model=Model(inputs=[self.input1, self.input2], outputs=[trans, ori])
+		
 
 
 
