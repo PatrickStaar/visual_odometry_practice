@@ -1,6 +1,7 @@
 from keras import Model
 from keras.layers import *
 from util import *
+from keras.applications.resnet50 import ResNet50
 
 
 class DepthModel:
@@ -23,51 +24,20 @@ class DepthModel:
         else:
             input = Input(tensor=self.input_tensor)
 
-        res1 = ZeroPadding2D((3, 3))(input)
-        res1 = conv(res1, 64, (7, 7), (2, 2), name='conv1')
-        res1 = batchnorm(res1, name='bn_conv1', axis=3)
-        res1 = activiate(res1)
-        #res1 = layers.ZeroPadding2D(padding=(1, 1), name='pool1_pad')(res1)
-        res1_pooling = pooling(res1, size=(2, 2))
-        
-        stage = 2
-        filters = [64, 64, 256]
-        res2 = res_conv_block(res1_pooling, filters, stage, block='a', stride=(1, 1))
-        res2 = res_identity_block(res2, filters, stage, block='b')
-        res2 = res_identity_block(res2, filters, stage, block='c')
-    
-        
-        stage = 3
-        filters = [128, 128, 512]
-        res3 = res_conv_block(res2, filters, stage, block='a')
-        res3 = res_identity_block(res3, filters, stage, block='b')
-        res3 = res_identity_block(res3, filters, stage, block='c')
-        res3 = res_identity_block(res3, filters, stage, block='d')
+        x = ResNet50(include_top=False, weights=None, input_tensor=input)
+        # x.summary()
+        skip1 = x.get_layer('activation_1').output
+        skip2 = x.get_layer('activation_10').output
+        skip3 = x.get_layer('activation_22').output
+        skip4 = x.get_layer('activation_40').output
+        # skip5 = x.ger_layer('activiation_98').output
 
-        stage = 4
-        filters = [256, 256, 1024]
-        res4 = res_conv_block(res3, filters, stage, block='a')
-        res4 = res_identity_block(res4, filters, stage, block='b')
-        res4 = res_identity_block(res4, filters, stage, block='c')
-        res4 = res_identity_block(res4, filters, stage, block='d')
-        res4 = res_identity_block(res4, filters, stage, block='e')
-        res4 = res_identity_block(res4, filters, stage, block='f')
+        skip1 = conv(skip1, 1, (1, 1), (1, 1))
+        skip2 = conv(skip2, 1, (1, 1), (1, 1))
+        skip3 = conv(skip3, 1, (1, 1), (1, 1))
+        skip4 = conv(skip4, 1, (1, 1), (1, 1))
 
-        stage = 5
-        filters = [512, 512, 2048]
-        res5 = res_conv_block(res4, filters, stage, block='a')
-        res5 = res_identity_block(res5, filters, stage, block='b')
-        res5 = res_identity_block(res5, filters, stage, block='c')
-
-        # res=pooling(res,size=(2,2),type='avg',padding='same')
-
-        code = conv(res5, 1, (1, 1), (1, 1), name='conv_post_res')
-
-        skip1 = conv(res1, 1, (1, 1), (1, 1))
-        skip2 = conv(res2, 1, (1, 1), (1, 1))
-        skip3 = conv(res3, 1, (1, 1), (1, 1))
-        skip4 = conv(res4, 1, (1, 1), (1, 1))
-        # skip5 = conv(res5, 1, (1, 1), (1, 1))
+        code = conv(x.get_layer('activation_49').output, 1, (1, 1), (1, 1), name='conv_post_res')
 
         dec4 = decoder_block(code, skip4, [1, ], 4)
         dec3 = decoder_block(dec4, skip3, [1, ], 3)
@@ -83,16 +53,16 @@ class DepthModel:
     def model_from_file(self, model_file, weights_file=None):
         pass
 
+    def compile(self):
+
+        self.model.compile()
+
     def predict(self, input):
         self.model.predict(input)
 
-    def load_weights(self,path,resnet_only=False):
+    def load_weights(self, path, resnet_only=False):
 
         if resnet_only:
-            self.model.load_weights(path,by_name=True)
+            self.model.load_weights(path, by_name=True)
         else:
             self.model.load_weights(path)
-
-
-    # def get_data(self, data):
-    #     return data

@@ -12,16 +12,12 @@ def conv(inputs, filters, kernel, stride=(1, 1), padding='valid', input_shape=No
 
 
 def deconv(inputs, filters, kernel, stride, input_shape=None, name=None):
-
     return Conv2DTranspose(filters=filters,
                            kernel_size=kernel,
                            strides=stride,
                            padding='same',
                            name=name
                            )(inputs)
-
-
-
 
 
 def activiate(inputs, type='relu'):
@@ -108,16 +104,23 @@ def decoder_block(input1, input2, output_channels, stage, block='a'):
     # name='deconv{}{}_branch'.format(stage,block)
     # bn_name = 'de_bn{}{}_branch'.format(stage,block)
     x = deconv(input1, output_channels[0], kernel=(4, 4), stride=(2, 2))
-    if input2 is not None: # tf.Tensor 不能直接作为bool
+    if input2 is not None:  # tf.Tensor 不能直接作为bool
         x = Add()([x, input2])
 
+    return x
+
+
+def post_process(x):
+    # flatten the transform matrix
+    x = x[:, :3, :]
+    x = K.reshape(x, (-1, 12))
     return x
 
 
 # data reading
 
 def img_read(filename):
-    img =np.array(Image.open(filename),dtype=np.float32)
+    img = np.array(Image.open(filename), dtype=np.float32)
     img = img / 255.0
     img[:, :, 0] = (img[:, :, 0] - 0.485) / 0.229
     img[:, :, 1] = (img[:, :, 1] - 0.456) / 0.224
@@ -131,17 +134,17 @@ def depth_read(filename):
     # for details see readme.txt
     depth_png = np.array(Image.open(filename), dtype=int)
     # make sure we have a proper 16bit depth map here.. not 8bit!
-    assert(np.max(depth_png) > 255)
+    assert (np.max(depth_png) > 255)
 
     depth = depth_png.astype(np.float) / 256.
     depth[depth_png == 0] = 1000.
-    depth/=1
-    depth=np.expand_dims(depth,axis=-1)
+    depth /= 1
+    depth = np.expand_dims(depth, axis=-1)
     return depth
 
 
 def paths_generator(directory, list='list.txt'):
-    files=[]
+    files = []
     with open(os.path.join(directory, list), 'r') as t:
         items = t.readlines()
         for i in items:
@@ -153,25 +156,26 @@ def data_generator(paths, batch_size=64):
     while True:
         input_paths = np.random.choice(a=paths, size=batch_size)
         batch_input = []
-        batch_gt =[]
+        batch_gt = []
 
         for input_path in input_paths:
-            gt_path=input_path.replace('sync_image_', 'sync_groundtruth_depth_').replace('images', 'groundtruth_depth')
+            gt_path = input_path.replace('sync_image_', 'sync_groundtruth_depth_').replace('images',
+                                                                                           'groundtruth_depth')
 
             batch_input.append(img_read(input_path))
             batch_gt.append(depth_read(gt_path))
 
-        batch_input= np.array(batch_input)
+        batch_input = np.array(batch_input)
         batch_gt = np.array(batch_gt)
 
         yield (batch_input, batch_gt)
 
 
 def data_total(train_path, gt_path):
-    train_files=paths_generator(train_path)
-    gt_files=paths_generator(gt_path)
+    train_files = paths_generator(train_path)
+    gt_files = paths_generator(gt_path)
 
-    train_img =np.array([img_read(i) for i in train_files])
+    train_img = np.array([img_read(i) for i in train_files])
     gt_img = np.array([depth_read(i) for i in gt_files])
 
     return train_img, gt_img

@@ -23,7 +23,9 @@ class PoseModel:
 
         x=Dense(units=512,activation='relu')(encoded)
         x=Dense(units=512,activation='relu')(x)
-        predict=Dense(units=6,activation='softmax')
+        pose = Dense(units=6, activation='softmax')
+
+
 
     def model_from_file(self, model_file, weights_file=None):
         pass
