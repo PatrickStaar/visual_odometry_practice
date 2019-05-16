@@ -54,8 +54,8 @@ class DepthModel:
         pass
 
     def compile(self):
-
-        self.model.compile()
+        self.model.compile(optimizer='adam',
+                           loss='mean_squared_error')
 
     def predict(self, input):
         self.model.predict(input)

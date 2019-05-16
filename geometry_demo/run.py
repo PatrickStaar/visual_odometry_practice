@@ -40,9 +40,11 @@ z=1.65
 
 with open(outfile, 'w') as out:
     with open(conf.path + 'associated.txt') as img_list:
-
+        indx = 0
         id = -1
         for line in img_list:
+            if indx == 10:
+                break
             line=line.rstrip('\n')
             timestamp, rgb, t, depth = line.split(' ')
             timestamp = float(timestamp)
@@ -60,5 +62,6 @@ with open(outfile, 'w') as out:
             if vio.t is not None:
                 t=vio.t.T
                 x,y,z=t[0, 0] +x , t[0, 1] +y, t[0, 2] + z
-                print('{:.4f} {:>,.4f} {:.4f} {:.4f}'.format(fr.timestamp,x,y,z ))
+                print('{:.4f} {:>,.4f} {:.4f} {:.4f}'.format(fr.timestamp, x, y, z), file=out)
+            indx += 1
             #print('processed:', id)

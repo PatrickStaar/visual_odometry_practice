@@ -33,19 +33,23 @@ class vo:
         self.cur_pts2d, self.cur_desp = self.detector.detectAndCompute(self.cur_frame.img, mask=None)
 
         if self.status == 0:
+            # 读入的第一帧作为参考
             self.set_ref()
             self.status = 1
 
         elif self.status == 1:
             self.get_matches()
+            # 是否输出匹配图
             if visual and self.matches is not None:
                 self.draw_matches()
-
+            # 根据匹配计算pose
             self.R, self.rvec, self.t = self.get_pose()
-
+            # 构造转移矩阵
             self.T_cam = np.column_stack((self.R, np.reshape(self.t, (3, 1))))
             self.T_cam = np.row_stack((self.T_cam, np.array([0, 0, 0, 1], dtype=np.float32)))
+            # 当前的位姿矩阵与之前的矩阵相乘获得相对于世界坐标的pose
             self.T_wld2cam = np.matmul(self.T_wld2cam, self.T_cam)
+            # 设置当前帧为参考
             self.set_ref()
 
         else:
@@ -61,6 +65,7 @@ class vo:
         ref_pts3d = []
         ref_desp = []
         ref_pts2d = []
+        # 将像素坐标转为三维相机坐标系坐标
         for i in range(len(self.cur_pts2d)):
             d = self.cur_frame.get_depth(self.cur_pts2d[i])
             # print(d)
@@ -68,15 +73,14 @@ class vo:
                 ref_pts3d.append(self.camera.pix2cam(self.cur_pts2d[i], d))
                 ref_desp.append(self.cur_desp[i])
                 ref_pts2d.append(self.cur_pts2d[i])
-
+        # 设置参考点的相机坐标，像素坐标，描述子
         self.ref_pts3d = np.array(ref_pts3d, dtype=np.float32, )
         self.ref_desp = np.array(ref_desp, dtype=np.float32)
         self.ref_pts2d = ref_pts2d
 
         self.ref_frame = self.cur_frame
 
-
-
+    # 获得两帧特征点间的匹配结果
     def get_matches(self):
         matches = self.matcher.knnMatch(self.ref_desp, self.cur_desp, k=2)
         good_matches = []
@@ -90,6 +94,7 @@ class vo:
                             None)
         cv2.imwrite('./matches/match_{}.jpg'.format(self.ref_frame.id), m)
 
+    # 计算位姿
     def get_pose(self):
         matched_ref3d = []
         matched_cur2d = []

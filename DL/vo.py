@@ -119,8 +119,7 @@ class VO:
 
         return expanded
 
-
-v = VO(input_shape=(1, 352, 1216, 3))
+# v = VO(input_shape=(1, 352, 1216, 3))
 # plot_model(v.model, to_file='./vo.png', show_shapes=True)
 # v.model.summary()
 # v.compile()

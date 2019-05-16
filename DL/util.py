@@ -1,6 +1,8 @@
 import os
 from PIL import Image
 from keras.layers import *
+import cv2
+from depthmap import Depth
 
 
 def conv(inputs, filters, kernel, stride=(1, 1), padding='valid', input_shape=None, name=None):
@@ -122,9 +124,9 @@ def post_process(x):
 def img_read(filename):
     img = np.array(Image.open(filename), dtype=np.float32)
     img = img / 255.0
-    img[:, :, 0] = (img[:, :, 0] - 0.485) / 0.229
-    img[:, :, 1] = (img[:, :, 1] - 0.456) / 0.224
-    img[:, :, 2] = (img[:, :, 2] - 0.406) / 0.225
+    # img[:, :, 0] = (img[:, :, 0] - 0.485) / 0.229
+    # img[:, :, 1] = (img[:, :, 1] - 0.456) / 0.224
+    # img[:, :, 2] = (img[:, :, 2] - 0.406) / 0.225
     return img
 
 
@@ -132,15 +134,18 @@ def depth_read(filename):
     # loads depth map D from png file
     # and returns it as a numpy array,
     # for details see readme.txt
-    depth_png = np.array(Image.open(filename), dtype=int)
-    # make sure we have a proper 16bit depth map here.. not 8bit!
-    assert (np.max(depth_png) > 255)
+    dep = Depth(filename)
+    # dep.interpolate()
+    # depth_png = np.array(Image.open(filename), dtype=int)
+    # # make sure we have a proper 16bit depth map here.. not 8bit!
+    # assert (np.max(depth_png) > 255)
+    #
+    # depth = depth_png.astype(np.float) / 256.
+    # depth[depth_png == 0] = -1.
 
-    depth = depth_png.astype(np.float) / 256.
-    depth[depth_png == 0] = 1000.
-    depth /= 1
-    depth = np.expand_dims(depth, axis=-1)
-    return depth
+    depthmap = 1 / dep.depthmap
+    depthmap = np.expand_dims(depthmap, axis=-1)
+    return depthmap
 
 
 def paths_generator(directory, list='list.txt'):
@@ -179,3 +184,19 @@ def data_total(train_path, gt_path):
     gt_img = np.array([depth_read(i) for i in gt_files])
 
     return train_img, gt_img
+
+
+def data_tum(base_dir):
+    train_img = []
+    depth_gt = []
+    with open(base_dir + 'associated.txt') as img_list:
+        for line in img_list:
+            line = line.rstrip('\n')
+            timestamp, rgb, t, depth = line.split(' ')
+            # timestamp = float(timestamp)
+            train_img.append(img_read(base_dir + rgb))
+            depth_gt.append(depth_read(base_dir + depth))
+
+    train_img = np.array(train_img)
+    depth_gt = np.array(depth_gt)
+    return train_img, depth_gt

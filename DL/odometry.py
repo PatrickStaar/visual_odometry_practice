@@ -3,6 +3,7 @@ from keras import Model
 from keras.applications.vgg16 import VGG16
 from util import *
 from projective import vec2mat
+from keras.utils.vis_utils import plot_model
 
 
 class OdometryModel():
@@ -50,5 +51,5 @@ class OdometryModel():
         self.model = Model(inputs=[self.input1, self.input2], outputs=[mat])
 
 # vo=OdometryModel(input_shape=(1,352,1216,3),mode='supervised')
-# vo.model.summary()
-# plot_model(vo, to_file='./vo_model.png')
+# # vo.model.summary()
+# plot_model(vo.model, to_file='./odometry.png')
