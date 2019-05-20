@@ -49,7 +49,3 @@ class OdometryModel():
             mat = Lambda(post_process)(mat)
 
         self.model = Model(inputs=[self.input1, self.input2], outputs=[mat])
-
-# vo=OdometryModel(input_shape=(1,352,1216,3),mode='supervised')
-# # vo.model.summary()
-# plot_model(vo.model, to_file='./odometry.png')

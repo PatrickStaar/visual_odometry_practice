@@ -1,15 +1,20 @@
-from depth_model import DepthModel
+from models import DepthModel
 from util import *
 from keras.callbacks import *
 from conf import conf
+from keras.models import model_from_json
+import json
+
+# load json and create model
 
 depth = DepthModel(input_shape=conf['input_shape'])
+depth.model_from_file('depth_model_multi_output.json')
 
 # Visualize
 # depth.model.summary()
 # plot_model(depth.model, to_file='depth_model.png')
 
-depth.load_weights(conf['resnet_weights'], resnet_only=True)
+depth.load_weights(conf['depth_weights'], resnet_only=True)
 print('weights loaded')
 # depth.model.compile(optimizer='adam', loss=mean_squared_error)
 
@@ -35,8 +40,9 @@ print('compiled')
 # x, gt4,gt3,gt2,gt1 = data_tum(conf['data_path'],multi_losses=True)
 # print('dataset loaded')
 
+
 save_check = ModelCheckpoint(filepath='./weights/best.h5',
-                             monitor='val_loss',
+                             monitor='loss',
                              save_best_only=True,
                              save_weights_only=True,
                              mode='auto')

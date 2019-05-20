@@ -10,7 +10,13 @@ conf = {
     'data_path': ['./datasets/freiburg1xyz/',
                   './datasets/freiburg2xyz/',
                   './datasets/freiburg3/',
+                  './datasets/nyu/'
                   ],
-    'weights': './weights/best.h5',
-    'resnet_weights': './weights/resnet50_notop.h5',
+    'depth_weights': './weights/depth.h5',
+    'depth_model_for_pred': './json/depth_model_single_output.json',
+    'depth_model_for_train': './json/depth_model_multi_output.json',
+    'pose_weights': './weights/pose.h5',
+    'resnet': './weights/resnet50_notop.h5',
+    'vgg': './weights/vgg.h5',
+
 }

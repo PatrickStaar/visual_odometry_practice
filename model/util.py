@@ -1,9 +1,8 @@
 import os
-import cv2
 from PIL import Image
 from keras.layers import *
 from depthmap import Depth
-
+from pose_utils import *
 
 def conv(inputs, filters, kernel, stride=(1, 1), padding='valid', input_shape=None, name=None):
     return Conv2D(filters=filters,
@@ -45,13 +44,13 @@ def post_process(x):
 
 
 # data reading
-
-def img_read(filename):
+def img_read(filename, aug=False):
     img = np.array(Image.open(filename), dtype=np.float32)
     img = img / 255.0
-    # img[:, :, 0] = (img[:, :, 0] - 0.485) / 0.229
-    # img[:, :, 1] = (img[:, :, 1] - 0.456) / 0.224
-    # img[:, :, 2] = (img[:, :, 2] - 0.406) / 0.225
+    if aug:
+        img[:, :, 0] = (img[:, :, 0] - 0.485) / 0.229
+        img[:, :, 1] = (img[:, :, 1] - 0.456) / 0.224
+        img[:, :, 2] = (img[:, :, 2] - 0.406) / 0.225
     return img
 
 
@@ -93,6 +92,7 @@ def data_generator(base_dir, batch_size=64):
                 image_list.append(b + rgb)
                 depth_list.append(b + depth)
     indexes = [i for i in range(len(image_list))]
+
     while True:
         input_paths = np.random.choice(a=indexes, size=batch_size)
         batch_input = []
@@ -158,3 +158,43 @@ def data_tum(base_dir, multi_losses=False):
     gt2 = np.array(gt2)
     gt1 = np.array(gt1)
     return train_img, depth_gt, gt3, gt2, gt1
+
+
+def pose_generator(base_dir, batch_size=64):
+    image_list = []
+    stamp_list = []
+    pose_list = []
+
+    for b in base_dir:
+        with open(b + 'associated_poses.txt') as img_list:
+            for line in img_list:
+                line = line.rstrip('\n')
+                timestamp, rgb, _, tx, ty, tz, r1, r2, r3, r4 = line.split(' ')
+                image_list.append(b + rgb)
+                stamp_list.append(b + timestamp)
+                pose_list.append(transform44([float(i) for i in [tx, ty, tz, r1, r2, r3, r4]]))
+    indexes = [i for i in range(len(image_list))]
+    while True:
+        input_paths = np.random.choice(a=indexes, size=batch_size)
+        batch_input0 = []
+        batch_input1 = []
+        batch_gt = []
+
+        for i in input_paths:
+            if i == len(image_list) - 1:
+                t0 = i - 1
+                t1 = i
+            else:
+                t0 = i
+                t1 = i + 1
+            img0 = img_read(image_list[t0], aug=True)
+            img1 = img_read(image_list[t1], aug=True)
+            batch_input0.append(img0)
+            batch_input1.append(img1)
+            batch_gt.append(ominus(pose_list[t0], pose_list[t1]))
+
+        batch_input0 = np.array(batch_input0)
+        batch_input1 = np.array(batch_input1)
+        batch_gt = np.array(batch_gt)
+
+        yield [batch_input0, batch_input1], batch_gt

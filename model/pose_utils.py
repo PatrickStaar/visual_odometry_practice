@@ -55,8 +55,8 @@ def transform44(l):
     Output:
     matrix -- 4x4 homogeneous transformation matrix
     """
-    t = l[1:4]
-    q = numpy.array(l[4:8], dtype=numpy.float64, copy=True)
+    t = l[0:3]
+    q = numpy.array(l[3:7], dtype=numpy.float64, copy=True)
     nq = numpy.dot(q, q)
     if nq < _EPS:
         return numpy.array(((1.0, 0.0, 0.0, t[0]),

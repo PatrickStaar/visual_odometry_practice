@@ -1,19 +1,21 @@
 import numpy as np
-from depth_model import DepthModel
+from models import DepthModel
 from conf import conf
 from matplotlib import pyplot as p
 from util import img_read, depth_read
+import json
 
-x = img_read(conf['data_path'][2] + 'rgb/1341847981.358690.png')
-gt = np.squeeze(depth_read(conf['data_path'][2] + 'depth/1341847981.358724.png'))
+x = img_read(conf['data_path'][3] + 'rgb/6.jpg')
+gt = np.squeeze(depth_read(conf['data_path'][3] + 'depth/6.png'))
 
 depth = DepthModel(input_shape=conf['input_shape'])
-depth.load_weights(conf['weights'])
+depth.model_from_file(conf['depth_model_for_pred'])
+
+depth.load_weights(conf['depth_weights'])
 print('weights loaded')
 
 y = depth.model.predict(np.expand_dims(x, axis=0))
 y = np.reshape(y, (480, 640))
-
 p.figure(1)
 p.subplot(131)
 p.imshow(x)

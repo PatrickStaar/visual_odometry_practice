@@ -1,8 +1,6 @@
 import keras.backend as K
-from depth_model import DepthModel
-from odometry import OdometryModel
+from models import DepthModel, OdometryModel
 from keras import Model
-from keras.utils.vis_utils import plot_model
 from keras.losses import mean_absolute_error
 from projective import *
 
@@ -23,7 +21,7 @@ class VO:
         frame0 = Input(batch_shape=self.input_shape)
         frame1 = Input(batch_shape=self.input_shape)
 
-        dep = DepthModel(input_tensor=frame0)
+        dep = DepthModel(input_tensor=frame0, mode='single')
         odo = OdometryModel(inputs=[frame0, frame1])
 
         depthmap = dep.model.output
@@ -51,7 +49,7 @@ class VO:
         projective_loss = self.model.get_layer('image_synthesis_loss').output
         self.model.add_loss(projective_loss)
 
-        self.model.compile(optimizer='sgd',
+        self.model.compile(optimizer='adam',
                            loss=[None] * len(self.model.outputs))
 
     def projective_loss(self, inputs, intrinsic=None):
