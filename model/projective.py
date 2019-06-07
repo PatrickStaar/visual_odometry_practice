@@ -23,6 +23,37 @@ from util import *
 #     depth = depth
 #     return depth
 
+def get_intrinsics(array):
+    k = [[array[0], 0.0, array[2]],
+         [0.0, array[1], array[3]],
+         [0.0, 0.0, 1.0]]
+    k = np.expand_dims(k, axis=0)
+    k = tf.convert_to_tensor(k, dtype=tf.float32, name='intrinsics')
+    return k
+
+
+def synthesis(img_src, depth, pose, shape, intrinsic):
+    batch, height, width, _ = shape
+    depth = K.squeeze(depth, axis=-1)
+    intrinsics = K.tile(intrinsic, (batch, 1, 1))
+    pixel_coords = meshgrid(batch, height, width)
+    # 将像素坐标系转换为相机坐标系
+    cam_coords = pixel2cam(depth, pixel_coords, intrinsics)
+    # 构造4x4内参矩阵
+    filler = K.constant([0.0, 0.0, 0.0, 1.0], shape=[1, 1, 4])
+    filler = K.tile(filler, [batch, 1, 1])
+    intrinsics = K.concatenate([intrinsics, K.zeros([batch, 3, 1])], axis=2)
+    intrinsics = K.concatenate([intrinsics, filler], axis=1)
+    # Get a 4x4 transformation matrix from 'target' camera frame to 'source'
+    # pixel frame.
+    # 获得从目标帧到源帧的转换矩阵
+    proj_tgt_cam_to_src_pixel = K.batch_dot(intrinsics, pose)
+    src_pixel_coords = cam2pixel(cam_coords, proj_tgt_cam_to_src_pixel)
+    # 获得合成后的图像
+    img_syn = bilinear_sampler(img_src, src_pixel_coords)
+    return img_syn
+
+
 
 def euler2mat(z, y, x):
     """Converts euler angles to rotation matrix

@@ -3,7 +3,7 @@ from util import *
 from keras.callbacks import *
 from conf import conf
 from keras.models import model_from_json
-import json
+from data_generator import depth_model_generator
 
 # load json and create model
 
@@ -33,14 +33,6 @@ depth.model.compile(optimizer='adam',
                     loss_weights=loss_weights)
 print('compiled')
 
-## 使用生成器
-# x=paths_generator(train_data)
-
-# 一次性导入数据
-# x, gt4,gt3,gt2,gt1 = data_tum(conf['data_path'],multi_losses=True)
-# print('dataset loaded')
-
-
 save_check = ModelCheckpoint(filepath='./weights/best.h5',
                              monitor='loss',
                              save_best_only=True,
@@ -50,19 +42,9 @@ lr_decay = ReduceLROnPlateau(monitor='loss', factor=0.1, patience=2)
 
 callbacks = [save_check, lr_decay]
 print('start training')
-depth.model.fit_generator(data_generator(conf['data_path'], batch_size=2),
+depth.model.fit_generator(depth_model_generator(conf['data_path'], batch_size=2),
                           epochs=20,
                           steps_per_epoch=100,
                           verbose=1,
                           callbacks=callbacks)
 
-# depth.model.fit(x=x,
-#                 y={'activation_50':gt4,
-#                    'conv2d_transpose_4':gt3,
-#                    'conv2d_transpose_3':gt2,
-#                    'conv2d_transpose_2':gt1},
-#                 batch_size=4,
-#                 epochs=1,
-#                 callbacks=callbacks,
-#                 validation_split=0.05,
-#                 )
