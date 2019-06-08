@@ -35,6 +35,7 @@ def get_intrinsics(array):
 def synthesis(img_src, depth, pose, shape, intrinsic):
     batch, height, width, _ = shape
     depth = K.squeeze(depth, axis=-1)
+
     intrinsics = K.tile(intrinsic, (batch, 1, 1))
     pixel_coords = meshgrid(batch, height, width)
     # 将像素坐标系转换为相机坐标系

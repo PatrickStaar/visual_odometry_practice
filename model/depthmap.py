@@ -90,15 +90,3 @@ class Depth:
         dep = dep.astype(np.int)
         img = Image.fromarray(dep)
         img.save(filename)
-
-#
-# dep = Depth(filename='1.png')
-# # dep.interpolate()
-# # dep.write('2.png')
-# # #
-# from matplotlib import pyplot as plt
-# #
-# plt.figure()
-# plt.imshow(dep.depthmap)
-# plt.show()
-#

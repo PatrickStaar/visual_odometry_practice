@@ -4,6 +4,7 @@ from keras import Model
 from keras.losses import mean_absolute_error, mean_squared_error
 from projective import *
 from conf import conf
+from keras.optimizers import Adam
 
 
 class VO:
@@ -35,6 +36,7 @@ class VO:
             print('weights_loaded')
 
         depthmap = dep.model.output
+        # depthmap = Lambda(lambda x: 1.0/(x+1e-8))(depthmap)
         pose = odo.model.output
 
         mat = Lambda(vec2mat, name='euler2mat')(pose)
@@ -64,8 +66,8 @@ class VO:
         # smo_loss = self.model.get_layer('smo_loss').output
         self.model.add_loss(syn_loss)
         #self.model.add_loss(smo_loss)
-
-        self.model.compile(optimizer='adam',
+        adam = Adam(lr=0.01)
+        self.model.compile(optimizer=adam,
                            loss=[None] * len(self.model.outputs), )  #
 
     def load_weights(self, paths):
@@ -75,6 +77,8 @@ class VO:
 
     def img_syn(self, inputs):
         img_src, depth, pose = inputs
+        depth = K.clip(depth, 1e-4, 1e4)
+        depth = 1.0 / depth
         img_tgt = synthesis(img_src, depth, pose, self.input_shape, self.intrinsic)
         return img_tgt
 
