@@ -6,15 +6,14 @@ from keras.models import model_from_json
 from data_generator import depth_model_generator
 
 # load json and create model
-
 depth = DepthModel(input_shape=conf['input_shape'])
-depth.model_from_file('depth_model_multi_output.json')
+depth.model_from_file(conf['depth_model_for_train'])
 
 # Visualize
 # depth.model.summary()
 # plot_model(depth.model, to_file='depth_model.png')
 
-depth.load_weights(conf['depth_weights'], resnet_only=True)
+depth.load_weights(conf['depth_weights'])
 print('weights loaded')
 # depth.model.compile(optimizer='adam', loss=mean_squared_error)
 
@@ -42,7 +41,7 @@ lr_decay = ReduceLROnPlateau(monitor='loss', factor=0.1, patience=2)
 
 callbacks = [save_check, lr_decay]
 print('start training')
-depth.model.fit_generator(depth_model_generator(conf['data_path'], batch_size=2),
+depth.model.fit_generator(depth_model_generator(conf['data_path'], batch_size=1),
                           epochs=20,
                           steps_per_epoch=100,
                           verbose=1,
