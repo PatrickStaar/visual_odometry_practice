@@ -23,6 +23,7 @@ class Depth:
         else:
             return True
 
+    # 补充深度图中的缺失部分
     def interpolate(self):
         height = self.height
         width = self.width
