@@ -33,4 +33,4 @@ Dataset dirs should be like:
 3. VO
 
 ### Other Files
-Processed datasets and model related files are at `https://pan.baidu.com/s/1NLf8PgDxgpJmXeUrmDCr1A`, and code is `beq6`
+Processed datasets and model related files are at https://pan.baidu.com/s/1NLf8PgDxgpJmXeUrmDCr1A, and code is `beq6`
