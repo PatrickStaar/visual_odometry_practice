@@ -10,10 +10,10 @@
 *.zip
 *.txt
 *.ipynb
-
+*.mp4
 model/deprecated
 model/.ipynb_checkpoints
 model/.idea
-model/.vs
+model/.vs*
 model/__pycache__
 model/datasets
