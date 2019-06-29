@@ -29,31 +29,31 @@ class VO:
                 l.trainable = False
 
         odo = OdometryModel(inputs=[frame0, frame1])
+        odo.build()
 
-        if separated_weights:
-            odo.load_weights(conf['pose_weights'])
+        if separated_weights:            
             dep.load_weights(conf['depth_weights'])
+            odo.load_weights(conf['pose_weights'])
             print('weights_loaded')
 
         depthmap = dep.model.output
-        # depthmap = Lambda(lambda x: 1.0/(x+1e-8))(depthmap)
         pose = odo.model.output
 
         mat = Lambda(vec2mat, name='euler2mat')(pose)
         img_syn = Lambda(self.img_syn, name='synthesis'
                          )([frame1, depthmap, mat])
 
+
         inputs = [frame0, frame1]
 
         if self.mode is 'train':
-
             syn_loss = Lambda(self.syn_loss, name='syn_loss'
                               )([frame0, img_syn])
 
-            # loss1 = Lambda(self.smo_loss,
+            # smo_loss = Lambda(self.smo_loss,
             #               name='smo_loss')(depthmap)
 
-            outputs = [depthmap, pose, syn_loss]  # , loss1]
+            outputs = [depthmap, pose, syn_loss]  # ,smo_loss]
         else:
             outputs = [depthmap, pose]
 
@@ -68,16 +68,15 @@ class VO:
         #self.model.add_loss(smo_loss)
         adam = Adam(lr=0.01)
         self.model.compile(optimizer=adam,
-                           loss=[None] * len(self.model.outputs), )  #
+                           loss=[None] * len(self.model.outputs), ) 
 
     def load_weights(self, paths):
-
         for file in paths:
             self.model.load_weights(file, by_name=True)
 
     def img_syn(self, inputs):
         img_src, depth, pose = inputs
-        depth = K.clip(depth, 1e-4, 1e4)
+        depth = K.clip(depth, 1e-6, 1e6)
         depth = 1.0 / depth
         img_tgt = synthesis(img_src, depth, pose, self.input_shape, self.intrinsic)
         return img_tgt
@@ -89,9 +88,6 @@ class VO:
     def syn_loss(self, inputs):
 
         img_tgt, img_syn = inputs
-        # batch, height, width, _ =self.input_shape
-        # img_syn = K.reshape(img_syn, (batch, -1))
-        # img_tgt = K.reshape(img_tgt, (batch, -1))
         img_tgt_cropped = K.slice(img_tgt, (0, 40, 40, 0), (-1, 400, 560, -1))
         img_syn_cropped = K.slice(img_syn, (0, 40, 40, 0), (-1, 400, 560, -1))
         loss = K.mean(mean_absolute_error(img_tgt_cropped, img_syn_cropped))
@@ -113,3 +109,6 @@ class VO:
 
     def model_from_file(self, model_file):
         self.model = model_from_file(model_file)
+
+    def save_as_json(self, path):
+        save_model(path, self.model)

@@ -99,9 +99,7 @@ class OdometryModel():
         self.input = concatenate([self.input1, self.input2])
         self.model = None
 
-        self._build()
-
-    def _build(self):
+    def build(self):
 
         # vgg = VGG16(include_top=False, weights=None, input_tensor=self.input)
         # l = vgg.get_layer(name='block1_conv1')
@@ -146,11 +144,10 @@ class OdometryModel():
 
         self.model = Model(inputs=[self.input1, self.input2], outputs=[pose])
 
-    def load_weights(self, path, vgg_only=False):
-
-        if vgg_only:
-            self.model.load_weights(path, by_name=True)
-        else:
+    def load_weights(self, path):  # , vgg_only=False):
+        # if vgg_only:
+        #     self.model.load_weights(path, by_name=True)
+        # else:
             self.model.load_weights(path)
 
     def model_from_file(self, file):
